@@ -37,6 +37,8 @@ def ErrorRate (w, x, y):
     
     # Find y_cap
     y_cap = ((np.matmul(x,w))>0).astype(int)
+    # Note y_cap needs to be changed to [-1,1]
+    y_cap[y_cap<1]=-1
     # Calculate Total Loss for N Samples
     loss = (((y_cap!=y).astype(float)).sum())/y.size
     
@@ -56,6 +58,8 @@ def PLA(w, x, y, maxIter):
         
         # First Identify Misclassified Samples
         y_cap = ((np.matmul(x,w))>0).astype(int)
+        # Note y_cap needs to be changed to [-1,1]
+        y_cap[y_cap<1]=-1
         r = (y_cap!=y).astype(int)
         
         # Create an Array to Store Indices of
