@@ -92,6 +92,7 @@ trainData = d[0].reshape(3500,-1)
 trainData = np.append(np.ones((trainData.shape[0],1)),trainData,axis=1)
 
 validData = d[1].reshape(100,-1)
+
 testData = d[2].reshape(145,-1)
 testData = np.append(np.ones((testData.shape[0],1)),testData,axis=1)
 
@@ -103,8 +104,28 @@ testTarget = d[5].astype(int)
 testTarget[testTarget<1]=-1
 
 # Training
-w = PLA(np.zeros((785,1)),trainData,trainTarget,100) #Add 1 to w for bias
+wPLA = PLA(np.zeros((trainData.shape[1],1)),trainData,trainTarget,100) #Add 1 to w for bias
 
 # Test
-EClassTest = ErrorRate(w,testData,testTarget)
-print("The Classification Error is {:f}".format(EClassTest))
+EClassTest = ErrorRate(wPLA,testData,testTarget)
+print("The Classification Error using the testing data is {:f} or {:f}% (PLA)".format(EClassTest,EClassTest*100))
+
+# Pocket Algorithm Implementation
+def pocket(x, y, T):
+    # Init Weight Vector
+    w = np.zeros((x.shape[1],1))
+    while(T>0):
+        wNew = PLA(w,x,y,1)
+        ENew = ErrorRate(wNew,x,y)
+        EOld = ErrorRate(w,x,y)
+        if ENew < EOld:
+            w = wNew
+        T-=1
+    return w
+
+# Training with Pocket Algorithm Using Train Data
+wPocket = pocket(trainData,trainTarget,100)
+
+# Testing with Test Data
+EClassTestPocket = ErrorRate(wPocket,testData,testTarget)
+print("The Classification Error using the testing data is {:f} or {:f}% (Pocket)".format(EClassTestPocket,EClassTestPocket*100))
