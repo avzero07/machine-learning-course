@@ -4,7 +4,7 @@ Created on Thu Jan 30 23:12:29 2020
 
 @author: akshay
 """
-
+import cProfile
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -89,40 +89,33 @@ def grad_descent(w, x, y, eta, iterations, reg, error_tol):
 epochs = 5000
 regParam = 0 # Lambda
 learningRate1 = 0.005 # eta1
-learningRate2 = 0.001 # eta2
-learningRate3 = 0.0001 # eta3
+
+lambda1 = 0.001
+lambda2 = 0.01
+lambda3 = 0.1
+
 errTolerance = 0.0000001 # tolerance
 
-# For Learning Rate 1
-op1 = grad_descent(np.zeros((trainData2.shape[1],1)),trainData2,trainTarget2,learningRate1,epochs,regParam,errTolerance)
+# For Lambda 1
+opLambda1 = grad_descent(np.zeros((trainData2.shape[1],1)),trainData2,trainTarget2,learningRate1,epochs,lambda1,errTolerance)
+# Test Loss
+ceLossTest1 = crossEntropyLoss(opLambda1[0],testData2,testTarget2,lambda1)
+# Validation Loss
+ceLossValid1 = crossEntropyLoss(opLambda1[0],validData2,validTarget2,lambda1)
+print("For Lambda = {:F}, TrainLoss = {:f}, TestLoss = {:f}, ValidLoss = {:f}".format(lambda1,opLambda1[1][-1],ceLossTest1,ceLossValid1))
 
-# For Learning Rate 2
-op2 = grad_descent(np.zeros((trainData2.shape[1],1)),trainData2,trainTarget2,learningRate2,epochs,regParam,errTolerance)
+# For Lambda 2
+opLambda2 = grad_descent(np.zeros((trainData2.shape[1],1)),trainData2,trainTarget2,learningRate1,epochs,lambda2,errTolerance)
+# Test Loss
+ceLossTest2 = crossEntropyLoss(opLambda2[0],testData2,testTarget2,lambda2)
+# Validation Loss
+ceLossValid2 = crossEntropyLoss(opLambda2[0],validData2,validTarget2,lambda2)
+print("For Lambda = {:F}, TrainLoss = {:f}, TestLoss = {:f}, ValidLoss = {:f}".format(lambda2,opLambda2[1][-1],ceLossTest2,ceLossValid2))
 
-# For Learning Rate 3
-op3 = grad_descent(np.zeros((trainData2.shape[1],1)),trainData2,trainTarget2,learningRate3,epochs,regParam,errTolerance)
-
-plt.plot(op1[1],"-r",label="eta = 0.005")
-plt.plot(op2[1],"-b",label="eta = 0.001")
-plt.plot(op3[1],"-g",label="eta = 0.0001")
-plt.xlabel('Epochs')
-plt.ylabel('Cross Entropy Loss')
-plt.legend(loc="upper right")
-plt.title("Cross Entropy Loss vs Epochs")
-plt.show()
-
-# Compute Loss With Test Data
-
-# With Eta = 0.005
-ceLossEta1 = crossEntropyLoss(op1[0],testData2,testTarget2,regParam)
-
-# With Eta = 0.001
-ceLossEta2 = crossEntropyLoss(op2[0],testData2,testTarget2,regParam)
-
-# With Eta = 0.0001
-ceLossEta3 = crossEntropyLoss(op3[0],testData2,testTarget2,regParam)
-
-print("Cross Entropy Loss computed for Test Data at Different Eta")
-print("For eta = 0.005, the Test Loss = {:f}".format(ceLossEta1))
-print("For eta = 0.001, the Test Loss = {:f}".format(ceLossEta2))
-print("For eta = 0.0001, the Test Loss = {:f}".format(ceLossEta3))
+# For Lambda 3
+opLambda3 = grad_descent(np.zeros((trainData2.shape[1],1)),trainData2,trainTarget2,learningRate1,epochs,lambda3,errTolerance)
+# Test Loss
+ceLossTest3 = crossEntropyLoss(opLambda3[0],testData2,testTarget2,lambda3)
+# Validation Loss
+ceLossValid3 = crossEntropyLoss(opLambda3[0],validData2,validTarget2,lambda3)
+print("For Lambda = {:F}, TrainLoss = {:f}, TestLoss = {:f}, ValidLoss = {:f}".format(lambda3,opLambda3[1][-1],ceLossTest3,ceLossValid3))
