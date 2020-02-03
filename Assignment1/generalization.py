@@ -74,7 +74,7 @@ def grad_descent(w, x, y, eta, iterations, reg, error_tol):
         grad = gradCE(w,x,y,reg)
         # 4 - Set Step Direction
         stepDir = -1.0*(grad/(np.linalg.norm(grad,2)))
-        wOld = w
+        wOld = np.copy(w)
         # 5 - Update Weights
         w = w + (eta*stepDir)
         # Calculate Loss
@@ -92,7 +92,7 @@ learningRate1 = 0.005 # eta1
 
 lambda1 = 0.001
 lambda2 = 0.01
-lambda3 = 0.1
+lambda3 = 0
 
 errTolerance = 0.0000001 # tolerance
 
@@ -119,3 +119,12 @@ ceLossTest3 = crossEntropyLoss(opLambda3[0],testData2,testTarget2,lambda3)
 # Validation Loss
 ceLossValid3 = crossEntropyLoss(opLambda3[0],validData2,validTarget2,lambda3)
 print("For Lambda = {:F}, TrainLoss = {:f}, TestLoss = {:f}, ValidLoss = {:f}".format(lambda3,opLambda3[1][-1],ceLossTest3,ceLossValid3))
+
+plt.plot(opLambda1[1],"-r",label="lambda = 0.001")
+plt.plot(opLambda2[1],"-b",label="lambda = 0.01")
+plt.plot(opLambda3[1],"-g",label="lambda = 0.1")
+plt.xlabel('Epochs')
+plt.ylabel('Cross Entropy Loss')
+plt.legend(loc="upper right")
+plt.title("Cross Entropy Loss vs Epochs")
+plt.show()

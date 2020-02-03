@@ -114,12 +114,14 @@ print("The Classification Error using the testing data is {:f} or {:f}% (PLA)".f
 def pocket(x, y, T):
     # Init Weight Vector
     w = np.zeros((x.shape[1],1))
+    wPocket = np.copy(w)
     while(T>0):
         wNew = PLA(w,x,y,1)
         ENew = ErrorRate(wNew,x,y)
-        EOld = ErrorRate(w,x,y)
-        if ENew < EOld:
-            w = wNew
+        EPocket = ErrorRate(wPocket,x,y)
+        if ENew < EPocket:
+            wPocket = np.copy(wNew)
+        w = np.copy(wNew)
         T-=1
     return w
 
