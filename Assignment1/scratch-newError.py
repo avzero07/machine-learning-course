@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jan 30 23:12:29 2020
+Created on Mon Feb  3 21:01:32 2020
 
-@author: akshay
+@author: aksha
 """
 import cProfile
 import matplotlib.pyplot as plt
@@ -37,8 +37,7 @@ def ErrorRate (w, x, y):
     
     # Find y_cap
     y_cap = ((np.matmul(x,w))>0).astype(int)
-    # Note y_cap needs to be changed to [-1,1]
-    y_cap[y_cap<1]=-1
+    
     # Calculate Total Loss for N Samples
     loss = (((y_cap!=y).astype(float)).sum())/y.size
     
@@ -144,3 +143,14 @@ plt.ylabel('Cross Entropy Loss')
 plt.legend(loc="upper right")
 plt.title("Cross Entropy Loss vs Epochs")
 plt.show()
+
+print("Classification Error Rates")
+cErLa1Val = ErrorRate(opLambda1[0],validData2,validTarget2)
+cErLa1Test = ErrorRate(opLambda1[0],testData2,testTarget2)
+print("Lambda1 = {:f} : Valid Error = {:f} , Test Error = {:f}".format(lambda1,cErLa1Val,cErLa1Test))
+cErLa2Val = ErrorRate(opLambda2[0],validData2,validTarget2)
+cErLa2Test = ErrorRate(opLambda2[0],testData2,testTarget2)
+print("Lambda2 = {:f} : Valid Error = {:f} , Test Error = {:f}".format(lambda2,cErLa2Val,cErLa2Test))
+cErLa3Val = ErrorRate(opLambda3[0],validData2,validTarget2)
+cErLa3Test = ErrorRate(opLambda3[0],testData2,testTarget2)
+print("Lambda3 = {:f} : Valid Error = {:f} , Test Error = {:f}".format(lambda3,cErLa3Val,cErLa3Test))
