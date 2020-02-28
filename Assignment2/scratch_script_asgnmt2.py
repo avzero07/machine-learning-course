@@ -45,7 +45,9 @@ def relu(x):
     return np.maximum(0,x)
 
 # SoftMax
-def softmax(x):    
+def softmax(x):
+    # Stability Trick to Avoid NaN
+    x = x - np.max(x)
     op = np.exp(x)/np.sum(np.exp(x))
     return op
 
@@ -79,12 +81,48 @@ def trainNN(trainingData, trainingTarget, weightHidd, weightOp, numIter, eta, al
     velocityOp = 1E-5 * (np.ones([weightOp.shape[0],weightOp.shape[1]]))
     sToHidd = np.zeros([trainingData.shape[0],numHiddenUnits])
     sToOp = np.zeros([trainingData.shape[0],numOpUnits])
-    losses = np.zeros([numIter,1])
+    
+    lossesTrain = np.zeros([numIter,1])
+    lossesValid = np.zeros([numIter,1])
+    lossesTest = np.zeros([numIter,1])
+    
+    accuracyTrain = np.zeros([numIter,1])
+    accuracyValid = np.zeros([numIter,1])
+    accuracyTest = np.zeros([numIter,1])
+    
+    # Utility Functions
+    
+    # A. Easy ForwardProp
+    def forwardProp(inputData,targetLabel,weightHidd,weightOp):
+        # 1. Hidden Layer
+        # Add Bias and Multiply with Weights to get S(1)
+        sToHidd = computeLayer(np.append(np.ones((inputData.shape[0],1)),inputData,axis=1),weightHidd)
+        # Calculate Activation to get X(1)
+        xToOp = relu(sToHidd)
+        
+        # 2. Output Layer
+        # Add Bias and Multiply with Weights to get S(L)
+        sToOp = computeLayer(np.append(np.ones((xToOp.shape[0],1)),xToOp,axis=1),weightOp)
+        # Calculate Activation to get h(x)
+        fpassResult = np.apply_along_axis(softmax,1,sToOp)
+        # Calculate Loss
+        fpassLoss  = CE(targetLabel,fpassResult)
+        
+        return fpassResult, fpassLoss
+    
+    # B. Easy Classification Accuracies
+    def classAccuracy(fpassResult,targetLabel):
+        # Fpass Classification
+        fpassClass = np.apply_along_axis(np.argmax,1,fpassResult)
+        # True Classification
+        trueClass = np.apply_along_axis(np.argmax,1,targetLabel)
+        return np.sum(fpassClass==trueClass)/targetLabel.shape[0]
     
     i = 1
-    while (i != numIter+1):
+    while (i != numIter+1):        
         # Forward Propagation
-        
+        if i==5:
+            print("here")
         # 1. Hidden Layer
         # Add Bias and Multiply with Weights to get S(1)
         sToHidd = computeLayer(np.append(np.ones((trainData.shape[0],1)),trainData,axis=1),weightHidd)
@@ -99,7 +137,7 @@ def trainNN(trainingData, trainingTarget, weightHidd, weightOp, numIter, eta, al
         
         # Calculate Loss
         loss = CE(trainingTarget,hx)
-        losses[i-1,0] = loss
+        lossesTrain[i-1,0] = loss
         
         # Back Propagation
         
@@ -110,7 +148,7 @@ def trainNN(trainingData, trainingTarget, weightHidd, weightOp, numIter, eta, al
         velocityOp = (alpha*velocityOp) - (eta*dEdWL)
         # 3. weightOp Update
         weightOp = weightOp + velocityOp
-    
+        
         # Part 2 : At Hidden
         # 1. Grad w.r.t weightHidd
         dedxl = np.matmul((hx-trainingTarget),weightOp.T)[:,1:] # Remember to Slice
@@ -121,11 +159,25 @@ def trainNN(trainingData, trainingTarget, weightHidd, weightOp, numIter, eta, al
         # 3. weightHidd Update
         weightHidd = weightHidd + velocityHidd
         
+        # Report Accuracies and Losses
+        
+        # 1. Training Accuracy
+        accuracyTrain[i-1,0] = classAccuracy(hx,trainingTarget)
+        
+        # 2. Validation Accuracy
+        fpassResValid, lossesValid[i-1,0] = forwardProp(validationData,validationTarget,weightHidd,weightOp)
+        accuracyValid[i-1,0] = classAccuracy(fpassResValid,validationTarget)
+        
+        # 3. Testing Accuracy
+        fpassResTest, lossesTest[i-1,0] = forwardProp(testData,testTarget,weightHidd,weightOp)
+        accuracyTest[i-1,0] = classAccuracy(fpassResTest,testTarget)
+        
+        print(i)
         # Increment Index
         i = i + 1 
 
     # Return Updated Weight Matrices, Losses, Classification Accuracies
-    return weightHidd, weightOp, losses, hx
+    return weightHidd, weightOp, lossesTrain, lossesValid, lossesTest, accuracyTrain, accuracyValid, accuracyTest
 
 # Load Data
 trainData, validData, testData, trainTarget, validTarget, testTarget = loadData()
@@ -136,4 +188,37 @@ testData = testData.reshape(testData.shape[0],-1)
 
 trainTargetOneHot, validTargetOneHot, testTargetOneHot = convertOneHot(trainTarget, validTarget, testTarget)
 
-a, b, c, h = trainNN(trainData, trainTargetOneHot, np.zeros([785,1000]), np.zeros([1001,10]),100,1E-5,0.9,validData,validTargetOneHot,testData,testTargetOneHot)
+alpha = 0.9                 # Momentum
+eta = 1E-5                  # Learning Rate
+numIter = 200               # Epochs
+numHiddenNeurons = 1000     # Number of Hidden Layer Neurons
+numInputNodes = 784         # Excluding Bias
+numOpNodes = 10             # 10 Classes
+
+# Weight Matrix Initialization
+variance = 2/(numInputNodes+numOpNodes)
+standDev = np.sqrt(variance)
+centre = 0.0
+
+weightHiddenLayer = np.random.normal(loc=centre,scale=standDev,size=(numInputNodes+1,numHiddenNeurons))
+weightOpLayer = np.random.normal(loc=centre,scale=standDev,size=(numHiddenNeurons+1,numOpNodes))
+
+wHid, wOp, ltrain, lvalid, ltest, atrain, avalid, atest = trainNN(trainData, trainTargetOneHot, weightHiddenLayer, weightOpLayer,numIter,eta,alpha,validData,validTargetOneHot,testData,testTargetOneHot)
+
+plt.plot(atrain,"-r",label="Training Set")
+plt.plot(avalid,"-b",label="Validation Set")
+plt.plot(atest,"-g",label="Test Set")
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.legend(loc="upper left")
+plt.title("Classification Accuracy vs Number of Epochs")
+plt.show()
+
+plt.plot(ltrain,"-r",label="Training Set")
+plt.plot(lvalid,"-b",label="Validation Set")
+plt.plot(ltest,"-g",label="Testing Set")
+plt.xlabel('Epochs')
+plt.ylabel('Cross Entropy Loss')
+plt.legend(loc="upper right")
+plt.title("Cross Entropy Loss vs Epochs")
+plt.show()
