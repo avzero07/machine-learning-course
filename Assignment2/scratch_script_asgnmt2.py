@@ -59,7 +59,7 @@ def computeLayer(x,W):
 # CE Loss
 def CE(target, prediction):
     # My Implementation is n x k
-    return (-1.0/target.shape[0])*np.sum(np.multiply(target,np.log(np.apply_along_axis(softmax,1,prediction))))
+    return (-1.0/target.shape[0])*np.sum(np.multiply(target,np.log(1E-15+np.apply_along_axis(softmax,1,prediction))))
     
 # Grad CE
 def gradCE(target, prediction):
@@ -106,7 +106,7 @@ def trainNN(trainingData, trainingTarget, weightHidd, weightOp, numIter, eta, al
         # Calculate Activation to get h(x)
         fpassResult = np.apply_along_axis(softmax,1,sToOp)
         # Calculate Loss
-        fpassLoss  = CE(targetLabel,fpassResult)
+        fpassLoss  = CE(targetLabel,sToOp)
         
         return fpassResult, fpassLoss
     
@@ -116,16 +116,14 @@ def trainNN(trainingData, trainingTarget, weightHidd, weightOp, numIter, eta, al
         fpassClass = np.apply_along_axis(np.argmax,1,fpassResult)
         # True Classification
         trueClass = np.apply_along_axis(np.argmax,1,targetLabel)
-        return np.sum(fpassClass==trueClass)/targetLabel.shape[0]
+        return np.sum(fpassClass!=trueClass)/targetLabel.shape[0]
     
     i = 1
     while (i != numIter+1):        
         # Forward Propagation
-        if i==5:
-            print("here")
         # 1. Hidden Layer
         # Add Bias and Multiply with Weights to get S(1)
-        sToHidd = computeLayer(np.append(np.ones((trainData.shape[0],1)),trainData,axis=1),weightHidd)
+        sToHidd = computeLayer(np.append(np.ones((trainingData.shape[0],1)),trainingData,axis=1),weightHidd)
         # Calculate Activation to get X(1)
         xToOp = relu(sToHidd)
         
@@ -136,14 +134,14 @@ def trainNN(trainingData, trainingTarget, weightHidd, weightOp, numIter, eta, al
         hx = np.apply_along_axis(softmax,1,sToOp)
         
         # Calculate Loss
-        loss = CE(trainingTarget,hx)
+        loss = CE(trainingTarget,sToOp)
         lossesTrain[i-1,0] = loss
         
         # Back Propagation
         
         # Part 1 : At OP
         # 1. Grad w.r.t weightOp
-        dEdWL = np.matmul((np.append(np.ones((xToOp.shape[0],1)),xToOp,axis=1)).T,(hx-trainingTarget))
+        dEdWL = (1/1)*(np.matmul((np.append(np.ones((xToOp.shape[0],1)),xToOp,axis=1)).T,(hx-trainingTarget)))
         # 2. Velocity OP
         velocityOp = (alpha*velocityOp) - (eta*dEdWL)
         # 3. weightOp Update
@@ -153,7 +151,7 @@ def trainNN(trainingData, trainingTarget, weightHidd, weightOp, numIter, eta, al
         # 1. Grad w.r.t weightHidd
         dedxl = np.matmul((hx-trainingTarget),weightOp.T)[:,1:] # Remember to Slice
         derRelu = (sToHidd>0).astype(int) # Derivative of ReLU
-        dEdWl = np.matmul((np.append(np.ones((trainData.shape[0],1)),trainData,axis=1)).T,np.multiply(derRelu,dedxl))
+        dEdWl = (1/1)*np.matmul((np.append(np.ones((trainingData.shape[0],1)),trainingData,axis=1)).T,np.multiply(derRelu,dedxl))
         # 2. Velocity Hidden
         velocityHidd = (alpha*velocityHidd) - (eta*dEdWl)
         # 3. weightHidd Update
@@ -200,8 +198,12 @@ variance = 2/(numInputNodes+numOpNodes)
 standDev = np.sqrt(variance)
 centre = 0.0
 
-weightHiddenLayer = np.random.normal(loc=centre,scale=standDev,size=(numInputNodes+1,numHiddenNeurons))
-weightOpLayer = np.random.normal(loc=centre,scale=standDev,size=(numHiddenNeurons+1,numOpNodes))
+
+#weightHiddenLayer = np.random.normal(loc=centre,scale=standDev,size=(numInputNodes+1,numHiddenNeurons))
+weightHiddenLayer = np.zeros([numInputNodes+1,numHiddenNeurons])
+#weightOpLayer = np.random.normal(loc=centre,scale=standDev,size=(numHiddenNeurons+1,numOpNodes))
+weightOpLayer = np.zeros([numHiddenNeurons+1,numOpNodes])
+
 
 wHid, wOp, ltrain, lvalid, ltest, atrain, avalid, atest = trainNN(trainData, trainTargetOneHot, weightHiddenLayer, weightOpLayer,numIter,eta,alpha,validData,validTargetOneHot,testData,testTargetOneHot)
 
@@ -209,9 +211,9 @@ plt.plot(atrain,"-r",label="Training Set")
 plt.plot(avalid,"-b",label="Validation Set")
 plt.plot(atest,"-g",label="Test Set")
 plt.xlabel('Epochs')
-plt.ylabel('Accuracy')
-plt.legend(loc="upper left")
-plt.title("Classification Accuracy vs Number of Epochs")
+plt.ylabel('Classification Error')
+plt.legend(loc="upper right")
+plt.title("Classification Error vs Number of Epochs")
 plt.show()
 
 plt.plot(ltrain,"-r",label="Training Set")
