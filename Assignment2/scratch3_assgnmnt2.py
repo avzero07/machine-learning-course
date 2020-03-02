@@ -147,7 +147,7 @@ def trainNN(trainingData, trainingTarget, weightHidd, weightOp, numIter, eta, al
         
         # Part 1 : At OP
         # 1. Grad w.r.t weightOp
-        dEdWL = (1/trainingData.shape[0])*(np.matmul((np.append(np.ones((1,xToOp.shape[1])),xToOp,axis=0)),gradCE(trainingTarget.T,sToOp).T))
+        dEdWL = (1/1)*(np.matmul((np.append(np.ones((1,xToOp.shape[1])),xToOp,axis=0)),gradCE(trainingTarget.T,sToOp).T))
         # 2. Velocity OP
         velocityOp = (alpha*velocityOp)-(eta*dEdWL)
         # 3. weightOp Update
@@ -158,7 +158,7 @@ def trainNN(trainingData, trainingTarget, weightHidd, weightOp, numIter, eta, al
         dedxl = (np.matmul(weightOp[1:,:],gradCE(trainingTarget.T,sToOp)))
         derRelu = (sToHidd>0).astype(int) # Derivative of ReLU
         temp = np.multiply((derRelu),(dedxl)) # [n x numberHiddenNeuron]
-        dEdWl = (1/trainingData.shape[0])*(np.matmul((np.append(np.ones((trainingData.shape[0],1)),trainingData,axis=1)).T,temp.T))
+        dEdWl = (1/1)*(np.matmul((np.append(np.ones((trainingData.shape[0],1)),trainingData,axis=1)).T,temp.T))
         # 2. Velocity Hidden
         velocityHidd = (alpha*velocityHidd)-(eta*dEdWl)
         # 3. weightHidd Update
@@ -177,7 +177,7 @@ def trainNN(trainingData, trainingTarget, weightHidd, weightOp, numIter, eta, al
         fpassResTest, lossesTest[i-1,0] = forwardProp(testData,testTarget,weightHidd,weightOp)
         accuracyTest[i-1,0] = classAccuracy(fpassResTest,testTarget.T)
         
-        print(i)
+        print("Epoch: {:d} Train Acc: {:f} Train Loss: {:f}".format(i,accuracyTrain[i-1,0],lossesTrain[i-1,0]))
         # Increment Index
         i = i + 1
     return weightHidd, weightOp, lossesTrain, lossesValid, lossesTest, accuracyTrain, accuracyValid, accuracyTest
@@ -192,24 +192,18 @@ testData = testData.reshape(testData.shape[0],-1)
 trainTargetOneHot, validTargetOneHot, testTargetOneHot = convertOneHot(trainTarget, validTarget, testTarget)
 
 alpha = 0.9                 # Momentum
-eta = 1E-2                  # Learning Rate
+eta = 0.6*(1e-05)                  # Learning Rate
 numIter = 200               # Epochs
-numHiddenNeurons = 2500       # Number of Hidden Layer Neurons
+numHiddenNeurons = 1000       # Number of Hidden Layer Neurons
 numInputNodes = 784         # Excluding Bias
 numOpNodes = 10             # 10 Classes
+centre = 0                  # Mean of Distribution to Draw Weights
 
 # Weight Matrix Initialization
-variance = 2/(numInputNodes+numOpNodes)
-standDev = np.sqrt(variance)
-centre = 0.0
 
-weightHiddenLayer = np.random.normal(loc=centre,scale=standDev,size=(numInputNodes+1,numHiddenNeurons))
-#weightHiddenLayer = np.zeros([numInputNodes+1,numHiddenNeurons])
-weightOpLayer = np.random.normal(loc=centre,scale=standDev,size=(numHiddenNeurons+1,numOpNodes))
-#weightOpLayer = np.zeros([numHiddenNeurons+1,numOpNodes])
-
-wHid, wOp, ltrain, lvalid, ltest, atrain, avalid, atest = trainNN(trainData, trainTargetOneHot, weightHiddenLayer, weightOpLayer,numIter,eta,alpha,validData,validTargetOneHot,testData,testTargetOneHot)
-
+def standDevDistr(ipNodes,opNodes):
+    variance = 2/(ipNodes+opNodes)
+    return np.sqrt(variance)
 
 # Test
 
@@ -218,27 +212,51 @@ testOp = np.matrix([1,0])
 testHidd = 2
 testIpNodes = 2
 testOpNodes = 2
-testWeightHid = np.random.normal(loc=centre,scale=standDev,size=(testIpNodes+1,testHidd))
-testWeightOp = np.random.normal(loc=centre,scale=standDev,size=(testHidd+1,testOpNodes))
+testWeightHid = np.random.normal(loc=centre,scale=standDevDistr(testIpNodes,testHidd),size=(testIpNodes+1,testHidd))
+testWeightOp = np.random.normal(loc=centre,scale=standDevDistr(testHidd,testOpNodes),size=(testHidd+1,testOpNodes))
 
-#wHid, wOp, ltrain, lvalid, ltest, atrain, avalid, atest = trainNN(testIp,testOp,testWeightHid,testWeightOp,1,eta,alpha,testIp,testOp,testIp,testOp)
+def constructAndTrainNN(alpha,eta,numIter,numHiddenNeurons,numInputNodes,numOpNodes,centre,trainData,trainTargetOneHot,validData,validTargetOneHot,testData,testTargetOneHot):
+    standDevHidd = standDevDistr(numInputNodes,numHiddenNeurons)
+    standDevOp = standDevDistr(numHiddenNeurons,numOpNodes)
+
+    weightHiddenLayer = np.random.normal(loc=centre,scale=standDevHidd,size=(numInputNodes+1,numHiddenNeurons))
+    #weightHiddenLayer = np.zeros([numInputNodes+1,numHiddenNeurons])
+    weightOpLayer = np.random.normal(loc=centre,scale=standDevOp,size=(numHiddenNeurons+1,numOpNodes))
+    #weightOpLayer = np.zeros([numHiddenNeurons+1,numOpNodes])
+
+    wHid, wOp, ltrain, lvalid, ltest, atrain, avalid, atest = trainNN(trainData, trainTargetOneHot, weightHiddenLayer, weightOpLayer,numIter,eta,alpha,validData,validTargetOneHot,testData,testTargetOneHot)
+    
+    plt.plot(atrain,"-r",label="Training Set")
+    plt.plot(avalid,"-b",label="Validation Set")
+    plt.plot(atest,"-g",label="Test Set")
+    plt.xlabel('Epochs')
+    plt.ylabel('Classification Accuracy')
+    plt.legend(loc="lower right")
+    plt.title("Classification Accuracy vs Number of Epochs")
+    plt.show()
+
+    plt.plot(ltrain,"-r",label="Training Set")
+    plt.plot(lvalid,"-b",label="Validation Set")
+    plt.plot(ltest,"-g",label="Testing Set")
+    plt.xlabel('Epochs')
+    plt.ylabel('Cross Entropy Loss')
+    plt.legend(loc="upper right")
+    plt.title("Cross Entropy Loss vs Epochs")
+    plt.show()
+    
+    return wHid, wOp, ltrain, lvalid, ltest, atrain, avalid, atest
+
+print('Number of Hidden Units = 1000')
+#wHid, wOp, ltrain, lvalid, ltest, atrain, avalid, atest = constructAndTrainNN(alpha,eta,numIter,numHiddenNeurons,numInputNodes,numOpNodes,centre,trainData,trainTargetOneHot,validData,validTargetOneHot,testData,testTargetOneHot)
+
+print('Number of Hidden Units = 500')
+#wHid500, wOp500, ltrain500, lvalid500, ltest500, atrain500, avalid500, atest500 = constructAndTrainNN(alpha,eta,numIter,500,numInputNodes,numOpNodes,centre,trainData,trainTargetOneHot,validData,validTargetOneHot,testData,testTargetOneHot)
+
+print('Number of Hidden Units = 1500')
+#wHid1500, wOp1500, ltrain1500, lvalid1500, ltest1500, atrain1500, avalid1500, atest1500 = constructAndTrainNN(alpha,eta,numIter,1500,numInputNodes,numOpNodes,centre,trainData,trainTargetOneHot,validData,validTargetOneHot,testData,testTargetOneHot)
+
+print('Number of Hidden Units = 2500')
+wHid2500, wOp2500, ltrain2500, lvalid2500, ltest2500, atrain2500, avalid2500, atest2500 = constructAndTrainNN(alpha,eta,numIter,2500,numInputNodes,numOpNodes,centre,trainData,trainTargetOneHot,validData,validTargetOneHot,testData,testTargetOneHot)
 
 # Test End
 
-plt.plot(atrain,"-r",label="Training Set")
-plt.plot(avalid,"-b",label="Validation Set")
-plt.plot(atest,"-g",label="Test Set")
-plt.xlabel('Epochs')
-plt.ylabel('Classification Accuracy')
-plt.legend(loc="lower right")
-plt.title("Classification Error vs Number of Epochs")
-plt.show()
-
-plt.plot(ltrain,"-r",label="Training Set")
-plt.plot(lvalid,"-b",label="Validation Set")
-plt.plot(ltest,"-g",label="Testing Set")
-plt.xlabel('Epochs')
-plt.ylabel('Cross Entropy Loss')
-plt.legend(loc="upper right")
-plt.title("Cross Entropy Loss vs Epochs")
-plt.show()
