@@ -246,8 +246,9 @@ def constructAndTrainNN(alpha,eta,numIter,numHiddenNeurons,numInputNodes,numOpNo
     
     return wHid, wOp, ltrain, lvalid, ltest, atrain, avalid, atest
 
+np.random.seed(7)
 print('Number of Hidden Units = 1000')
-#wHid, wOp, ltrain, lvalid, ltest, atrain, avalid, atest = constructAndTrainNN(alpha,eta,numIter,numHiddenNeurons,numInputNodes,numOpNodes,centre,trainData,trainTargetOneHot,validData,validTargetOneHot,testData,testTargetOneHot)
+wHid, wOp, ltrain, lvalid, ltest, atrain, avalid, atest = constructAndTrainNN(alpha,eta,numIter,numHiddenNeurons,numInputNodes,numOpNodes,centre,trainData,trainTargetOneHot,validData,validTargetOneHot,testData,testTargetOneHot)
 
 print('Number of Hidden Units = 500')
 #wHid500, wOp500, ltrain500, lvalid500, ltest500, atrain500, avalid500, atest500 = constructAndTrainNN(alpha,eta,numIter,500,numInputNodes,numOpNodes,centre,trainData,trainTargetOneHot,validData,validTargetOneHot,testData,testTargetOneHot)
@@ -256,7 +257,7 @@ print('Number of Hidden Units = 1500')
 #wHid1500, wOp1500, ltrain1500, lvalid1500, ltest1500, atrain1500, avalid1500, atest1500 = constructAndTrainNN(alpha,eta,numIter,1500,numInputNodes,numOpNodes,centre,trainData,trainTargetOneHot,validData,validTargetOneHot,testData,testTargetOneHot)
 
 print('Number of Hidden Units = 2500')
-wHid2500, wOp2500, ltrain2500, lvalid2500, ltest2500, atrain2500, avalid2500, atest2500 = constructAndTrainNN(alpha,eta,numIter,2500,numInputNodes,numOpNodes,centre,trainData,trainTargetOneHot,validData,validTargetOneHot,testData,testTargetOneHot)
+#wHid2500, wOp2500, ltrain2500, lvalid2500, ltest2500, atrain2500, avalid2500, atest2500 = constructAndTrainNN(alpha,eta,numIter,2500,numInputNodes,numOpNodes,centre,trainData,trainTargetOneHot,validData,validTargetOneHot,testData,testTargetOneHot)
 
 # Test End
 
