@@ -192,7 +192,7 @@ testData = testData.reshape(testData.shape[0],-1)
 trainTargetOneHot, validTargetOneHot, testTargetOneHot = convertOneHot(trainTarget, validTarget, testTarget)
 
 alpha = 0.9                 # Momentum
-eta = 0.6*(1e-05)                  # Learning Rate
+eta = (1e-05)                  # Learning Rate
 numIter = 200               # Epochs
 numHiddenNeurons = 1000       # Number of Hidden Layer Neurons
 numInputNodes = 784         # Excluding Bias
@@ -246,7 +246,7 @@ def constructAndTrainNN(alpha,eta,numIter,numHiddenNeurons,numInputNodes,numOpNo
     
     return wHid, wOp, ltrain, lvalid, ltest, atrain, avalid, atest
 
-np.random.seed(7)
+np.random.seed(77)
 print('Number of Hidden Units = 1000')
 wHid, wOp, ltrain, lvalid, ltest, atrain, avalid, atest = constructAndTrainNN(alpha,eta,numIter,numHiddenNeurons,numInputNodes,numOpNodes,centre,trainData,trainTargetOneHot,validData,validTargetOneHot,testData,testTargetOneHot)
 
