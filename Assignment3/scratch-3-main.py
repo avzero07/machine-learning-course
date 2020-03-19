@@ -10,9 +10,6 @@ import numpy as np
 
 # K-Means Algorithm
 
-data2D = np.load('data2D.npy')
-
-
 # Implementing Functions
 
 #testData = data2D[0:5,:]
@@ -162,23 +159,38 @@ def plotClust(x,mu,loss):
     pair_dist2 = distanceFunc(x,mu)
     clusterIndex = (np.argmin(pair_dist2,axis=1))
     
+    fig, (ax1,ax2) = plt.subplots(nrows=1, ncols=2,figsize=(15, 6))
+    
     color=iter(plt.cm.rainbow(np.linspace(0,1,mu.shape[0])))
     for i in range(0,mu.shape[0]):
         cluster = x[clusterIndex==i,:]
-        plt.scatter(cluster[:,0],cluster[:,1],next(color),label="Cluster-{}".format(i+1))
-    plt.scatter(mu[:,0],mu[:,1],color="black",marker="x",label="Cluster Center")
-    plt.xlabel('X1')
-    plt.ylabel('X2')
-    plt.legend(loc="lower right")
-    plt.title("K = {}".format(mu.shape[0]))
-    plt.show()
+        ax1.scatter(cluster[:,0],cluster[:,1],next(color),label="Cluster-{}".format(i+1))
+    ax1.scatter(mu[:,0],mu[:,1],color="black",marker="x",label="Cluster Center")
+    ax1.set_xlabel('X1')
+    ax1.set_ylabel('X2')
+    ax1.legend(loc="lower right")
+    ax1.set_title("K = {}".format(mu.shape[0]))
     
-    plt.plot(loss)
-    plt.xlabel('Iterations')
-    plt.ylabel('Loss')
-    plt.title("Loss vs Number of Iterations | K = {}".format(mu.shape[0]))
-    plt.show()
+    ax2.plot(loss)
+    ax2.set_xlabel('Iterations')
+    ax2.set_ylabel('K-Means Loss')
+    ax2.set_title("K-Means Loss vs Number of Iterations | K = {}".format(mu.shape[0]))
 
 # Integrated Test
-mu, Loss = Kmeans(data2D,5)
-plotClust(data2D,mu,Loss)
+    
+# Import Data
+data2D = np.load('data2D.npy')
+
+finalLoss = np.zeros([5,1])
+for i in range(1,6):
+    mu, Loss = Kmeans(data2D,i)
+    finalLoss[i-1] = Loss[-1]
+    plotClust(data2D,mu,Loss)
+
+# Loss vs K
+plt.figure()
+plt.plot(np.linspace(1,5,5),finalLoss,marker='o')
+plt.xlabel("K")
+plt.ylabel("K-Means Loss")
+plt.title("K-Means Loss as a Function of K")
+plt.show()
