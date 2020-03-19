@@ -51,16 +51,27 @@ def KMinit(x, K):
     for i in range(0,K):
         if i==0:
             mu[i,:] = x[i,:]
+            centroid = x[i,:]
             continue
         maxD = 0
         maxDind = 0
+        
         for j in range(0,x.shape[0]):
-            dist = np.linalg.norm((mu[i-1,:]-x[j,:]),ord=2)
+            dist = np.linalg.norm((centroid-x[j,:]),ord=2)
             if dist > maxD:
+                # Check if Point is Already in Mu
+                if(x[j,:] in mu):
+                    continue
                 maxD = dist
                 maxDind = j
+
         # Set Mu
         mu[i,:] = x[maxDind,:]
+        
+        tempCent = np.zeros([1,2])
+        for k in range(0,i+1):
+            tempCent = tempCent + mu[k,:]
+        centroid = tempCent / (i+1)
     
     return mu
 
@@ -155,7 +166,7 @@ def plotClust(x,mu,loss):
     for i in range(0,mu.shape[0]):
         cluster = x[clusterIndex==i,:]
         plt.scatter(cluster[:,0],cluster[:,1],next(color),label="Cluster-{}".format(i+1))
-    plt.scatter(mu[:,0],mu[:,1],color="b",marker="x",label="Cluster Center")
+    plt.scatter(mu[:,0],mu[:,1],color="black",marker="x",label="Cluster Center")
     plt.xlabel('X1')
     plt.ylabel('X2')
     plt.legend(loc="lower right")
@@ -169,5 +180,5 @@ def plotClust(x,mu,loss):
     plt.show()
 
 # Integrated Test
-mu, Loss = Kmeans(data2D,3)
+mu, Loss = Kmeans(data2D,5)
 plotClust(data2D,mu,Loss)
