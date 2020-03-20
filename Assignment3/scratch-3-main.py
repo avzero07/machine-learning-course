@@ -28,7 +28,7 @@ def distanceFunc(x, mu):
     pair_dist2 = np.zeros([x.shape[0],mu.shape[0]])
     
     for i in range(0,mu.shape[0]):
-        pair_dist2[:,i] = (np.reshape(np.linalg.norm(x-mu[i,:],ord=2,axis=1),(x.shape[0],1)))[:,0]
+        pair_dist2[:,i] = np.sum(np.square(x-mu[i,:]),axis=1)
     
     return pair_dist2
 
@@ -193,4 +193,60 @@ plt.plot(np.linspace(1,5,5),finalLoss,marker='o')
 plt.xlabel("K")
 plt.ylabel("K-Means Loss")
 plt.title("K-Means Loss as a Function of K")
+plt.show()
+
+# Gap Statistics
+np.random.seed(421)
+
+# Init Result Vector
+resErr = np.zeros([10,5])
+
+# Determine Bounding Box Around Data2D
+def boxBound(x):
+    x1min = np.min(data2D[:,0])
+    x1max = np.max(data2D[:,0])
+    x2min = np.min(data2D[:,1])
+    x2max = np.max(data2D[:,1])
+    return x1min, x1max, x2min, x2max
+
+x1min, x1max, x2min, x2max = boxBound(data2D)
+
+# Loop Over 10 Datasets
+for i in range(0,10):
+    
+    # Init Dataset
+    dataRandX = np.random.uniform(low=x1min,high=x1max,size=(data2D.shape[0],1))
+    dataRandY = np.random.uniform(low=x2min,high=x2max,size=(data2D.shape[0],1))
+    dataRand2D = np.concatenate((dataRandX,dataRandY),axis=1) 
+    
+    # Loop Over K = 1 to 5
+    for j in range(1,6):
+        muRand, LossRand = Kmeans(dataRand2D,j)
+        resErr[i,j-1] = LossRand[-1]
+
+# Find Average of K-Means Error Per Cluster Size
+avgKmeans = (np.mean(resErr,axis=0,keepdims=True)).T
+
+# Plot Avg K-Means Error
+plt.figure()
+plt.plot(np.linspace(1,5,5),finalLoss,marker='o',label='$E_{in}(K)$')
+plt.plot(np.linspace(1,5,5),avgKmeans,marker='o',label='$E_{in}^{Rand}(K)$')
+plt.xlabel("K")
+plt.ylabel("K-Means Error")
+plt.legend(loc="upper right")
+plt.title("K-Means Error as a Function of K")
+plt.show()
+
+# Compute Gap Statistic
+def gapStat(randKmeansError,KmeansError):
+    res = np.log(randKmeansError) - np.log(KmeansError)
+    return res
+
+gap = gapStat(avgKmeans,finalLoss)
+# Plot Gap Statistics
+plt.figure()
+plt.plot(np.linspace(1,5,5),gap,marker='o')
+plt.xlabel("K")
+plt.ylabel("Gap Statistics")
+plt.title("Gap Statistics as a Function of K")
 plt.show()
