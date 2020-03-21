@@ -239,10 +239,15 @@ plt.show()
 
 # Compute Gap Statistic
 def gapStat(randKmeansError,KmeansError):
-    res = np.log(randKmeansError) - np.log(KmeansError)
+    # Assume randKmeansError is already average of Logs
+    res = (randKmeansError) - np.log(KmeansError)
     return res
 
-gap = gapStat(avgKmeans,finalLoss)
+# Update for Computing Gap Stats
+newResErr = np.log(resErr)
+newAvgKmeans = (np.mean(newResErr,axis=0,keepdims=True)).T
+
+gap = gapStat(newAvgKmeans,finalLoss)
 # Plot Gap Statistics
 plt.figure()
 plt.plot(np.linspace(1,5,5),gap,marker='o')
