@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Mar 18 15:31:28 2020
+Created on Tue Mar 24 10:08:01 2020
 
-@author: Akshay
+@author: akshay
 """
-
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.mixture import GaussianMixture
 
 # K-Means Algorithm
 
@@ -176,82 +176,47 @@ def plotClust(x,mu,loss):
     ax2.set_ylabel('K-Means Loss')
     ax2.set_title("K-Means Loss vs Number of Iterations | K = {}".format(mu.shape[0]))
 
-# Integrated Test
+def gaussMix(data,K):
+    # Create GMM
+    gmm = GaussianMixture(n_components=K)
+    gmm.fit(data)
     
+    return gmm
+
+
 # Import Data
-data2D = np.load('data2D.npy')
+data100D = np.load('data100D.npy')
 
-finalLoss = np.zeros([5,1])
-for i in range(1,6):
-    mu, Loss = Kmeans(data2D,i)
-    finalLoss[i-1] = Loss[-1]
-    plotClust(data2D,mu,Loss)
+# K Means
 
-# Loss vs K
-plt.figure()
-plt.plot(np.linspace(1,5,5),finalLoss,marker='o')
-plt.xlabel("K")
-plt.ylabel("K-Means Loss")
-plt.title("K-Means Loss as a Function of K")
-plt.show()
+finalLoss100 = np.zeros([6,1])
+finBIC100 = np.zeros([6,1])
 
-# Gap Statistics
-np.random.seed(421)
-
-# Init Result Vector
-resErr = np.zeros([10,5])
-
-# Determine Bounding Box Around Data2D
-def boxBound(x):
-    x1min = np.min(data2D[:,0])
-    x1max = np.max(data2D[:,0])
-    x2min = np.min(data2D[:,1])
-    x2max = np.max(data2D[:,1])
-    return x1min, x1max, x2min, x2max
-
-x1min, x1max, x2min, x2max = boxBound(data2D)
-
-# Loop Over 10 Datasets
-for i in range(0,10):
+for i in range(3,9):
+    mu, Loss = Kmeans(data100D,i)    
+    finalLoss100[i-3,0] = Loss[-1]
     
-    # Init Dataset
-    dataRandX = np.random.uniform(low=x1min,high=x1max,size=(data2D.shape[0],1))
-    dataRandY = np.random.uniform(low=x2min,high=x2max,size=(data2D.shape[0],1))
-    dataRand2D = np.concatenate((dataRandX,dataRandY),axis=1) 
+    gmmFin = gaussMix(data100D,i)
+    finBIC100[i-3,0] = gmmFin.bic(data100D)
+    print(i)
     
-    # Loop Over K = 1 to 5
-    for j in range(1,6):
-        muRand, LossRand = Kmeans(dataRand2D,j)
-        resErr[i,j-1] = LossRand[-1]
+# Plot K Means Loss vs K
+fig, (ax1,ax2) = plt.subplots(nrows=1, ncols=2,figsize=(17, 6))    
 
-# Find Average of K-Means Error Per Cluster Size
-avgKmeans = (np.mean(resErr,axis=0,keepdims=True)).T
+ax1.plot(finalLoss100,marker='o',label='Data 100D')
+ax1.set_xticks(np.arange(6), minor=False)
+ax1.set_xticklabels(np.linspace(3,8,6), fontdict=None, minor=False)
+ax1.set_xlabel('K')
+ax1.set_ylabel('K Means Loss')
+ax1.legend(loc="upper right")
+titax1 = ax1.set_title('K Means Loss as a Function of K')
 
-# Plot Avg K-Means Error
-plt.figure()
-plt.plot(np.linspace(1,5,5),finalLoss,marker='o',label='$E_{in}(K)$')
-plt.plot(np.linspace(1,5,5),avgKmeans,marker='o',label='$E_{in}^{Rand}(K)$')
-plt.xlabel("K")
-plt.ylabel("K-Means Error")
-plt.legend(loc="upper right")
-plt.title("K-Means Error as a Function of K")
-plt.show()
+# Plot BIC vs K
+ax2.plot(finBIC100,marker='o',label='Data 100D')
+ax2.set_xticks(np.arange(6), minor=False)
+ax2.set_xticklabels(np.linspace(3,8,6), fontdict=None, minor=False)
+ax2.set_xlabel('K')
+ax2.set_ylabel('BIC')
+ax2.legend(loc="upper right")
+titax2 = ax2.set_title('Bayesian Information Criterion (BIC) as a Function of K')
 
-# Compute Gap Statistic
-def gapStat(randKmeansError,KmeansError):
-    # Assume randKmeansError is already average of Logs
-    res = (randKmeansError) - np.log(KmeansError)
-    return res
-
-# Update for Computing Gap Stats
-newResErr = np.log(resErr)
-newAvgKmeans = (np.mean(newResErr,axis=0,keepdims=True)).T
-
-gap = gapStat(newAvgKmeans,finalLoss)
-# Plot Gap Statistics
-plt.figure()
-plt.plot(np.linspace(1,5,5),gap,marker='o')
-plt.xlabel("K")
-plt.ylabel("Gap Statistics")
-plt.title("Gap Statistics as a Function of K")
-plt.show()
