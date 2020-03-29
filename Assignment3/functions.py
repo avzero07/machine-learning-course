@@ -1,19 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Mar 18 15:31:28 2020
+Created on Sat Mar 28 10:54:09 2020
 
-@author: Akshay
+@author: akshay
 """
-
 import matplotlib.pyplot as plt
 import numpy as np
-
-# K-Means Algorithm
-
-# Implementing Functions
-
-#testData = data2D[0:5,:]
-#testMu = np.array([[1,1],[-1,-1],[1,0]])
 
 # Function 1
 def distanceFunc(x, mu):
@@ -69,35 +61,6 @@ def KMinit(x, K):
         for k in range(0,i+1):
             tempCent = tempCent + mu[k,:]
         centroid = tempCent / (i+1)
-    
-    return mu
-
-# Need to compare Distance With All other Points
-def KMinit2(x, K):
-    # Inputs
-    # x: is an NxD data matrix 
-    # K: number of clusters
-    # Output
-    # mu: is the KxD matrix of initial cluster centers using the "greedy approach" described on page 6-16 in the textbook. 
-    # Remark: Always pick the first entry in the data set as the first center. 
-    
-    # YOUR CODE HERE
-    # Initialize mu
-    mu = np.zeros([K,x.shape[1]])
-    
-    for i in range(0,K):
-        if i==0:
-            mu[i,:] = x[i,:]
-            continue
-        maxD = 0
-        maxDind = 0
-        for j in range(0,x.shape[0]):
-            dist = np.linalg.norm((mu[i-1,:]-x[j,:]),ord=2)
-            if dist > maxD:
-                maxD = dist
-                maxDind = j
-        # Set Mu
-        mu[i,:] = x[maxDind,:]
     
     return mu
 
@@ -175,83 +138,3 @@ def plotClust(x,mu,loss):
     ax2.set_xlabel('Iterations')
     ax2.set_ylabel('K-Means Loss')
     ax2.set_title("K-Means Loss vs Number of Iterations | K = {}".format(mu.shape[0]))
-
-# Integrated Test
-    
-# Import Data
-data2D = np.load('data2D.npy')
-
-finalLoss = np.zeros([5,1])
-for i in range(1,6):
-    mu, Loss = Kmeans(data2D,i)
-    finalLoss[i-1] = Loss[-1]
-    plotClust(data2D,mu,Loss)
-
-# Loss vs K
-plt.figure()
-plt.plot(np.linspace(1,5,5),finalLoss,marker='o')
-plt.xlabel("K")
-plt.ylabel("K-Means Loss")
-plt.title("K-Means Loss as a Function of K")
-plt.show()
-
-# Gap Statistics
-np.random.seed(421)
-
-# Init Result Vector
-resErr = np.zeros([10,5])
-
-# Determine Bounding Box Around Data2D
-def boxBound(x):
-    x1min = np.min(data2D[:,0])
-    x1max = np.max(data2D[:,0])
-    x2min = np.min(data2D[:,1])
-    x2max = np.max(data2D[:,1])
-    return x1min, x1max, x2min, x2max
-
-x1min, x1max, x2min, x2max = boxBound(data2D)
-
-# Loop Over 10 Datasets
-for i in range(0,10):
-    
-    # Init Dataset
-    dataRandX = np.random.uniform(low=x1min,high=x1max,size=(data2D.shape[0],1))
-    dataRandY = np.random.uniform(low=x2min,high=x2max,size=(data2D.shape[0],1))
-    dataRand2D = np.concatenate((dataRandX,dataRandY),axis=1) 
-    
-    # Loop Over K = 1 to 5
-    for j in range(1,6):
-        muRand, LossRand = Kmeans(dataRand2D,j)
-        resErr[i,j-1] = LossRand[-1]
-
-# Find Average of K-Means Error Per Cluster Size
-avgKmeans = (np.mean(resErr,axis=0,keepdims=True)).T
-
-# Plot Avg K-Means Error
-plt.figure()
-plt.plot(np.linspace(1,5,5),finalLoss,marker='o',label='$E_{in}(K)$')
-plt.plot(np.linspace(1,5,5),avgKmeans,marker='o',label='$E_{in}^{Rand}(K)$')
-plt.xlabel("K")
-plt.ylabel("K-Means Error")
-plt.legend(loc="upper right")
-plt.title("K-Means Error as a Function of K")
-plt.show()
-
-# Compute Gap Statistic
-def gapStat(randKmeansError,KmeansError):
-    # Assume randKmeansError is already average of Logs
-    res = (randKmeansError) - np.log(KmeansError)
-    return res
-
-# Update for Computing Gap Stats
-newResErr = np.log(resErr)
-newAvgKmeans = (np.mean(newResErr,axis=0,keepdims=True)).T
-
-gap = gapStat(newAvgKmeans,finalLoss)
-# Plot Gap Statistics
-plt.figure()
-plt.plot(np.linspace(1,5,5),gap,marker='o')
-plt.xlabel("K")
-plt.ylabel("Gap Statistics")
-plt.title("Gap Statistics as a Function of K")
-plt.show()
