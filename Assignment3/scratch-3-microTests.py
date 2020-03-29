@@ -63,6 +63,8 @@ plt.scatter(testData1[:,0],testData1[:,1],marker='x',color='black',label='TestDa
 plt.scatter(KMinitTestData1[:,0],KMinitTestData1[:,1],marker='x',color='red',label='Center Determined by KMinit')
 plt.xlabel('X1')
 plt.ylabel('X2')
+plt.xticks(np.arange(1,11,1))
+plt.yticks(np.arange(-1,4,1))
 plt.legend(loc='lower center')
 plt.title('Fig 1: TestData1 and Initial Cluster Centers')
 plt.show()
@@ -72,7 +74,7 @@ testData2 = np.array([np.linspace(10,1,10)]).T
 testData2 = np.concatenate((testData2,testData2,testData2),axis=1)
 
 KMinitTestData2 = KMinit(testData2,2)
-print("\n\nTest 2 : Testing KMinit - 45 Degree Line in 3D (Points Defined in Reverse Order)")
+print("\n\nTest 2 : Testing KMinit - Inclined Line in 3D (Points Defined in Reverse Order)")
 # Plot
 fig = plt.figure(figsize=(9,6))
 ax = fig.add_subplot(111,projection='3d')
